@@ -1,86 +1,400 @@
 # Splunk-project
 
 ## Data Source:
-https://www.kaggle.com/competitions/web-traffic-time-series-forecasting/data
 
-## Objectives:
-Security Monitoring: Detect and respond to potential security threats.
-IT Operations: Monitor server performance, application logs, or network traffic to ensure uptime and performance.
-Business Analytics: Analyze sales data, customer behavior, or website traffic to gain insights into your business.
-DevOps Monitoring: Track CI/CD pipelines, application logs, or container metrics to optimize deployments.
+
 
 ## Install Splunk:
 
 Use docker to open splunk
 
-## Create Indexes:
+## Objectives:
+Using the buttercupgames dataset, produce the following KOs for me as a stakeholder:
 
-Define multiple indexes based on your data types (e.g., web_logs, sys_logs, app_logs, sales_data).
-Configure retention policies for different indexes to manage storage efficiently.
+5 Dashboards that show me:
+Buying trends
+Site Visitor trends
+Website Traffic over time
+Potential website improvements
+Security vulnerabilities/concerns within the website
 
-Ingest Data:
+At least 3 reports, each with a schedule
+At least one related to security
+At least one related to business insight
+One of your choice
 
-Use Splunk’s data inputs to ingest data. Upload files manually, set up directory monitors, or configure forwarders for live data.
-Validate that data is being indexed correctly by running basic searches (e.g., index=web_logs | head 10).
-Phase 3: Data Analysis and Searching
-Field Extraction and Data Enrichment:
+Create at least 3 alerts
+Monitoring areas of your choice
 
-Extract fields from your logs using Splunk’s Field Extractor or by writing regex-based extractions.
-Enrich your data with lookups, such as adding geolocation data based on IP addresses or mapping product IDs to product names.
-Search and Query Building:
+Bonus points if you:
+Use macros
+Use field aliases
+Implement Drilldowns
 
-Start with basic searches (index=web_logs) and gradually build more complex queries:
-Time-based searches: Analyze trends over time (e.g., timechart).
-Stats and Aggregation: Use stats, eventstats, tstats for aggregating data.
-Transforming Commands: Use commands like eval, rex, transaction to manipulate data.
-Advanced Searching Techniques:
+## Process:
+### Ingest data:
+upload cisco_ironport_web.log and 6 files from www1,www2,www3 -access.log and secure. log.
 
-Implement subsearches, joins, and union operations to combine different datasets.
-Use Splunk’s dedup and outlier functions to refine your searches.
-Phase 4: Visualization and Dashboarding
-Create Visualizations:
+### Set Up Field Extractions
+cisco:wsa
+(Cisco IronPort Web Security Appliance)
 
-Build a variety of visualizations, such as time charts, bar charts, pie charts, and tables.
-Use geo maps to display geographical data (e.g., web traffic by region).
-Design Dashboards:
+timestamp
+client_ip
+http_method
+url
+response_code
+bytes_transferred
+user_agent
+referrer
+access_combined (Web Access Logs)
 
-Create multiple dashboards:
-Overview Dashboard: A high-level dashboard that gives an overview of key metrics.
-Detailed Dashboard: Dashboards that drill down into specific areas, such as security incidents or sales trends.
-Make use of dynamic drilldowns and input controls (dropdowns, date pickers) to allow for interactive exploration.
-Phase 5: Alerting and Reporting
-Set Up Alerts:
+timestamp
+client_ip
+http_method
+url
+status
+bytes
+referrer
+user_agent
+linux_secure (Security Logs)
 
-Create alerts for various conditions:
-Threshold-based Alerts: Trigger an alert when a value exceeds a predefined threshold (e.g., CPU usage > 90%).
-Anomaly Detection: Set alerts for unusual patterns or spikes in activity.
-Real-Time Alerts: For security incidents like multiple failed login attempts or unauthorized access.
-Automate Reports:
+timestamp
+user
+action
+src_ip
+dest_ip
+result
 
-Schedule regular reports that summarize key metrics or incidents.
-Use PDF or CSV formats to share reports with stakeholders.
-Phase 6: Integrations and Automation
-Workflow Actions:
+### Create the Dashboards
+Dashboard 1: Buying Trends
+Focus: This dashboard will track user activities that indicate buying behavior.
 
-Create workflow actions that link search results to external systems (e.g., open a ticket in a ticketing system based on an alert).
-Integrate with External Tools:
+Sources: Primarily from the cisco_ironport_web.log (sourcetype cisco:wsa:squid) and access logs (access_combined).
 
-Integrate Splunk with tools like Slack or email to send notifications.
-Use APIs to fetch or send data between Splunk and other platforms.
-Leverage Machine Learning:
+Example Search Queries:
 
-Use Splunk’s Machine Learning Toolkit (MLTK) to build models for predictive analytics or anomaly detection.
-Apply these models to your data to identify trends or potential issues before they become critical.
-Phase 7: Documentation and Presentation
-Document Your Process:
+Identify URLs associated with purchases:
 
-Document each phase of your project, including data sources, search queries, and visualizations.
-Provide explanations for the decisions made during the project.
-Prepare a Presentation:
+index=web sourcetype=access_combined url="*purchase*" OR url="*checkout*"
+| stats count by url, client_ip 
+| sort -count
 
-Create a presentation that summarizes your findings and demonstrates the functionality of your Splunk dashboards and alerts.
-Highlight how your project can provide value to the business or solve specific problems.
-Review and Feedback:
+Top Products Viewed:
 
-Share your project with peers or mentors for feedback.
-Make improvements based on the feedback to refine your skills and project outcomes.
+index=web sourcetype=access_combined url="*product*" 
+| stats count by url 
+| sort -count
+
+Visualizations:
+
+Bar chart: Top products purchased or viewed.
+Time chart: Purchase activity over time.
+
+Dashboard 2: Site Visitor Trends
+Focus: Track the number of unique visitors, sessions, and general site interaction.
+
+Sources: Primarily from the cisco_ironport_web.log and access logs (access_combined).
+
+Example Search Queries:
+
+Unique Visitors Over Time:
+spl
+Copy code
+index=web sourcetype=access_combined 
+| timechart span=1h dc(client_ip) as Unique_Visitors
+Session Duration:
+spl
+Copy code
+index=web sourcetype=access_combined 
+| transaction client_ip maxpause=30m 
+| stats avg(duration) as Avg_Session_Duration
+Visualizations:
+
+Line chart: Unique visitors over time.
+Table: Average session duration.
+Dashboard 3: Website Traffic Over Time
+Focus: Analyze how traffic to the website varies over time.
+
+Sources: From all access logs (access_combined), this may include all web servers (web1, web2, web3).
+
+Example Search Queries:
+
+Traffic Volume Over Time:
+spl
+Copy code
+index=web sourcetype=access_combined 
+| timechart span=1h count as Traffic_Count
+Traffic by Host:
+spl
+Copy code
+index=web sourcetype=access_combined 
+| timechart span=1h count by host
+Visualizations:
+
+Time chart: Overall traffic over time.
+Stacked area chart: Traffic per host over time.
+Dashboard 4: Potential Website Improvements
+Focus: Identify slow-loading pages, errors, and other areas where user experience might be improved.
+
+Sources: Primarily from the access_combined logs.
+
+Example Search Queries:
+
+Slow Pages:
+spl
+Copy code
+index=web sourcetype=access_combined 
+| stats avg(response_time) as Avg_Response_Time by url 
+| sort -Avg_Response_Time
+HTTP Errors (4xx/5xx status codes):
+spl
+Copy code
+index=web sourcetype=access_combined status>=400 
+| stats count by status, url 
+| sort -count
+Visualizations:
+
+Bar chart: Pages with the highest average response time.
+Pie chart: Distribution of HTTP status codes.
+Dashboard 5: Security Vulnerabilities/Concerns
+Focus: Monitor and report on security-related incidents, such as failed login attempts, unauthorized access, etc.
+
+Sources: From linux_secure and cisco:wsa:squid.
+
+Example Search Queries:
+
+Failed Login Attempts:
+spl
+Copy code
+index=security sourcetype=linux_secure action="failed login" 
+| stats count by user, src_ip 
+| sort -count
+403/404 Errors:
+spl
+Copy code
+index=web sourcetype=cisco:wsa:squid status_code=403 OR status_code=404 
+| stats count by client_ip, url 
+| sort -count
+Unauthorized Access:
+spl
+Copy code
+index=security sourcetype=linux_secure action="unauthorized access"
+| stats count by user, src_ip, dest_ip
+| sort -count
+Visualizations:
+
+Table: Users with the most failed login attempts.
+Map: Geographic distribution of unauthorized access attempts.
+Bar chart: Most common URLs resulting in 403/404 errors.
+3. Building the Dashboards
+Create a New Dashboard:
+
+Go to the Search & Reporting app in Splunk.
+Click on Dashboards and then Create New Dashboard.
+Name the dashboard based on its focus (e.g., "Buying Trends").
+Add Panels:
+
+Click on Add Panel and choose New from Search.
+Input the search query for each panel and configure the visualization type (e.g., bar chart, line chart).
+Customize panel titles and descriptions.
+Customize and Save:
+
+Arrange the panels as needed on the dashboard.
+Save the dashboard and adjust any additional settings like permissions.
+4. Iterate and Refine
+Review Data: Regularly check the dashboards to ensure they provide accurate and actionable insights.
+Set Alerts: If certain metrics require immediate attention, set up alerts based on the dashboard data (e.g., spikes in failed login attempts).
+
+### Create reports
+
+1. Security Report: Failed Login Attempts
+Purpose: Monitor failed login attempts to identify potential security threats, such as brute-force attacks.
+
+Search Query:
+spl
+Copy code
+index=security sourcetype=linux_secure action=failure
+| stats count by user, src_ip
+| sort -count
+Steps to Create and Schedule:
+Run the Search: Use the above query to identify failed login attempts.
+Save as Report:
+After running the query, click on "Save As" > "Report".
+Name it something like "Failed Login Attempts by User and Source IP".
+Schedule the Report:
+In the report creation screen, select "Schedule".
+Set the frequency (e.g., daily, hourly).
+Choose the time of day to run the report.
+Set up an email alert or notification if the report identifies a high number of failures.
+Visualization: Optionally, add a bar chart or table to visualize the counts.
+2. Business Insight Report: Top Products or Services Accessed
+Purpose: Identify which products or services are most frequently accessed, giving insight into user behavior and business trends.
+
+Search Query:
+spl
+Copy code
+index=web sourcetype=access_combined
+| rex field=url "/(?<product>[^/]+)\?"
+| stats count by product
+| sort -count
+Steps to Create and Schedule:
+Run the Search: Use the above query to identify the most accessed products or services.
+Save as Report:
+Name it something like "Top Accessed Products".
+Schedule the Report:
+Schedule it to run weekly or monthly to track trends over time.
+Consider setting up alerts if access to specific products increases or decreases significantly.
+Visualization: A bar chart showing the most accessed products/services by count.
+3. Custom Report: Website Traffic Overview
+Purpose: Monitor overall website traffic trends, helping you understand peak usage times and potential issues.
+
+Search Query:
+spl
+Copy code
+index=web sourcetype=access_combined
+| timechart span=1h count by host
+Steps to Create and Schedule:
+Run the Search: Use the query to create an overview of traffic over time, broken down by host (e.g., www1, www2, www3).
+Save as Report:
+Name it something like "Hourly Website Traffic Overview".
+Schedule the Report:
+Schedule it to run daily or every few hours.
+Useful to understand traffic patterns and identify potential load or availability issues.
+Visualization: Use a line chart or area chart to visualize traffic over time.
+How to Schedule Reports in Splunk:
+After Running Your Query:
+
+Click on "Save As" > "Report".
+Fill out the report name, description, and any other details.
+Click on "Schedule".
+Set Schedule Parameters:
+
+Frequency: Choose when and how often the report should run (e.g., daily at 6 AM).
+Time Range: Define the time range the report should cover (e.g., "Last 24 hours").
+Alert Actions: Choose if you want to send an email or trigger another alert when the report runs.
+Review and Save: Finalize and save the scheduled report.
+
+Summary of Reports:
+Security Report: Failed Login Attempts (Scheduled Daily).
+Business Insight Report: Top Accessed Products (Scheduled Weekly).
+Custom Report: Website Traffic Overview (Scheduled Daily or Hourly).
+
+### Create 3 Alerts
+
+Alerts are essential for monitoring critical events and taking proactive measures. Below are three examples of alerts you can set up:
+
+Alert 1: Excessive Failed Login Attempts (Security Monitoring)
+Purpose: Detect potential brute-force attacks or unauthorized access attempts by monitoring excessive failed login attempts within a short period.
+
+Search Query:
+spl
+Copy code
+index=security sourcetype=linux_secure action=failure
+| stats count by src_ip
+| where count > 10
+Alert Configuration:
+Trigger Condition: When count > 10 (indicating more than 10 failed login attempts from the same IP within a specific time).
+Time Window: 10 minutes (adjust based on your environment).
+Alert Actions: Send an email notification to the security team, trigger a webhook, or log the alert to a file.
+Alert 2: High Website Response Time (Performance Monitoring)
+Purpose: Identify when your website's response time exceeds acceptable thresholds, which may indicate performance issues.
+
+Search Query:
+spl
+Copy code
+index=web sourcetype=access_combined
+| stats avg(response_time) as avg_response_time by host
+| where avg_response_time > 2  // Adjust threshold as needed
+Alert Configuration:
+Trigger Condition: When avg_response_time > 2 seconds.
+Time Window: 5 minutes.
+Alert Actions: Send an email, create a ticket in your incident management system, or send a Slack message.
+Alert 3: Unusual Spike in Traffic (Traffic Monitoring)
+Purpose: Detect unusual spikes in website traffic that could indicate a DDoS attack or viral content.
+
+Search Query:
+spl
+Copy code
+index=web sourcetype=access_combined
+| timechart span=5m count
+| eventstats avg(count) as avg_traffic
+| where count > 2 * avg_traffic
+Alert Configuration:
+Trigger Condition: When count > 2 * avg_traffic (indicating traffic has doubled compared to the average).
+Time Window: 15 minutes.
+Alert Actions: Send an email or SMS, trigger a webhook to start mitigation steps.
+2. Use Macros
+Macros in Splunk are reusable search strings that help simplify your queries and ensure consistency.
+
+Example Macro: Failed Login Attempts
+Create a macro that returns failed login attempts from the security index.
+
+Macro Definition:
+
+Name: failed_login_attempts
+Definition:
+spl
+Copy code
+index=security sourcetype=linux_secure action=failure
+Usage:
+Instead of typing the full search query each time, you can use:
+
+spl
+Copy code
+`failed_login_attempts` | stats count by user, src_ip
+Example Macro: High Response Time
+Create a macro that checks for high response times in web logs.
+
+Macro Definition:
+
+Name: high_response_time
+Definition:
+spl
+Copy code
+index=web sourcetype=access_combined | where response_time > 2
+Usage:
+
+spl
+Copy code
+`high_response_time` | stats count by url
+3. Use Field Aliases
+Field aliases allow you to create alternate names for existing fields to make them easier to use or more intuitive.
+
+Example Field Aliases:
+Alias client_ip as src_ip in Web Logs:
+
+If your web access logs use client_ip but your security logs use src_ip, create a field alias to standardize the field name:
+spl
+Copy code
+props.conf:
+[access_combined]
+FIELDALIAS-ip_alias = client_ip AS src_ip
+Alias status as http_status in Web Logs:
+
+If you want to differentiate the status code in web logs from other statuses:
+spl
+Copy code
+props.conf:
+[access_combined]
+FIELDALIAS-status_alias = status AS http_status
+Using Aliases in Searches:
+After defining these aliases, you can use the fields with their new names in your searches, making your queries more consistent across different datasets.
+
+Summary of Tasks:
+Create Alerts:
+
+Alert 1: Excessive Failed Login Attempts (Security Monitoring).
+Alert 2: High Website Response Time (Performance Monitoring).
+Alert 3: Unusual Spike in Traffic (Traffic Monitoring).
+Use Macros:
+
+Macro 1: failed_login_attempts to simplify queries related to failed logins.
+Macro 2: high_response_time to identify high response times quickly.
+Use Field Aliases:
+
+Alias 1: client_ip as src_ip in web logs.
+Alias 2: status as http_status to standardize field names across logs.
+These tasks will help you create a more efficient, automated, and consistent monitoring system in Splunk, covering both security and business insights.
+
+
