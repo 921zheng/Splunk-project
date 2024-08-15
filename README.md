@@ -1,12 +1,21 @@
 # Splunk-project
 
-## Data Source:
-
-
+## Data Source: 
+Udemy course: cisco_ironport_web.log/MOCK_DATA.csv/WWW1(access.log & secure.log)/WWW2(access.log & secure.log)/WWW3(access.log & secure.log)
 
 ## Install Splunk:
 
 Use docker to open splunk
+start container:
+docker start splunk-neww
+
+stop container: 
+docker stop splunk-neww
+
+link: http://localhost:8000/
+user:admin 
+ps:yearmonthday
+
 
 ## Objectives:
 Using the buttercupgames dataset, produce the following KOs for me as a stakeholder:
@@ -211,9 +220,7 @@ Set Alerts: If certain metrics require immediate attention, set up alerts based 
 1. Security Report: Failed Login Attempts
 Purpose: Monitor failed login attempts to identify potential security threats, such as brute-force attacks.
 
-Search Query:
-spl
-Copy code
+
 index=security sourcetype=linux_secure action=failure
 | stats count by user, src_ip
 | sort -count
@@ -293,10 +300,12 @@ Copy code
 index=security sourcetype=linux_secure action=failure
 | stats count by src_ip
 | where count > 10
+
 Alert Configuration:
 Trigger Condition: When count > 10 (indicating more than 10 failed login attempts from the same IP within a specific time).
 Time Window: 10 minutes (adjust based on your environment).
 Alert Actions: Send an email notification to the security team, trigger a webhook, or log the alert to a file.
+
 Alert 2: High Website Response Time (Performance Monitoring)
 Purpose: Identify when your website's response time exceeds acceptable thresholds, which may indicate performance issues.
 
@@ -306,24 +315,29 @@ Copy code
 index=web sourcetype=access_combined
 | stats avg(response_time) as avg_response_time by host
 | where avg_response_time > 2  // Adjust threshold as needed
+
 Alert Configuration:
 Trigger Condition: When avg_response_time > 2 seconds.
-Time Window: 5 minutes.
 Alert Actions: Send an email, create a ticket in your incident management system, or send a Slack message.
+
+
 Alert 3: Unusual Spike in Traffic (Traffic Monitoring)
 Purpose: Detect unusual spikes in website traffic that could indicate a DDoS attack or viral content.
 
 Search Query:
 spl
 Copy code
+
 index=web sourcetype=access_combined
 | timechart span=5m count
 | eventstats avg(count) as avg_traffic
 | where count > 2 * avg_traffic
+
 Alert Configuration:
 Trigger Condition: When count > 2 * avg_traffic (indicating traffic has doubled compared to the average).
 Time Window: 15 minutes.
 Alert Actions: Send an email or SMS, trigger a webhook to start mitigation steps.
+
 2. Use Macros
 Macros in Splunk are reusable search strings that help simplify your queries and ensure consistency.
 
@@ -333,68 +347,65 @@ Create a macro that returns failed login attempts from the security index.
 Macro Definition:
 
 Name: failed_login_attempts
-Definition:
-spl
-Copy code
+
 index=security sourcetype=linux_secure action=failure
-Usage:
-Instead of typing the full search query each time, you can use:
 
-spl
-Copy code
-`failed_login_attempts` | stats count by user, src_ip
-Example Macro: High Response Time
-Create a macro that checks for high response times in web logs.
+`failed_login_attempts` 
 
-Macro Definition:
 
-Name: high_response_time
-Definition:
-spl
-Copy code
-index=web sourcetype=access_combined | where response_time > 2
-Usage:
-
-spl
-Copy code
-`high_response_time` | stats count by url
 3. Use Field Aliases
-Field aliases allow you to create alternate names for existing fields to make them easier to use or more intuitive.
 
-Example Field Aliases:
-Alias client_ip as src_ip in Web Logs:
+Sourcetype, Source, or Host: Specify the sourcetype (like access_combined) that this alias applies to.
+Original Field: Enter the original field name (e.g., client_ip).
+Alias Field: Enter the new field name (e.g., src_ip).
 
-If your web access logs use client_ip but your security logs use src_ip, create a field alias to standardize the field name:
+
+index=your_index sourcetype=access_combined | stats count by src_ip
+same as
+index=your_index sourcetype=access_combined | stats count by client_ip
+
+
+Steps to Implement Drilldowns in Splunk:
+Create or Edit a Dashboard:
+
+First, navigate to Dashboards from the Splunk homepage.
+Choose an existing dashboard to edit or create a new one by clicking Create New Dashboard.
+Add a Chart or Table Visualization:
+
+Add a chart (e.g., bar, pie, or time chart) or table visualization that shows relevant data (like login failures by user).
+For example:
 spl
 Copy code
-props.conf:
-[access_combined]
-FIELDALIAS-ip_alias = client_ip AS src_ip
-Alias status as http_status in Web Logs:
+index=security sourcetype=linux_secure action=failure | stats count by user | sort - count
+Save the panel.
+Enable Edit Mode for the Dashboard:
 
-If you want to differentiate the status code in web logs from other statuses:
+Click Edit at the top right of the dashboard to enable edit mode.
+Select the Visualization Panel:
+
+Hover over the panel you want to add a drilldown to and click on the Edit icon (a pencil icon).
+Set Up the Drilldown Action:
+
+In the panel editing window, scroll down to find the Drilldown section.
+By default, Splunk might have "Enable drilldown" checked. Here you can specify the drilldown behavior:
+Link to Search: This option will take you to a search page pre-filtered by the clicked value.
+Link to Dashboard: This allows you to link to another dashboard.
+Link to Custom URL: If you want to open an external page.
+Set Tokens: For more advanced drilldowns, you can set tokens that will filter data within the same dashboard.
+Example Drilldown - Link to Search:
+
+Suppose you want to see detailed logs when clicking on a specific user.
+Choose Link to Search.
+Under Search String, you can specify a query like:
 spl
 Copy code
-props.conf:
-[access_combined]
-FIELDALIAS-status_alias = status AS http_status
-Using Aliases in Searches:
-After defining these aliases, you can use the fields with their new names in your searches, making your queries more consistent across different datasets.
+index=security sourcetype=linux_secure action=failure user=$click.value$
+$click.value$ automatically picks the clicked value (in this case, the username) and passes it to the search.
+Save Your Changes:
 
-Summary of Tasks:
-Create Alerts:
+Once configured, click Apply or Save to keep your drilldown settings.
+Test the Drilldown:
 
-Alert 1: Excessive Failed Login Attempts (Security Monitoring).
-Alert 2: High Website Response Time (Performance Monitoring).
-Alert 3: Unusual Spike in Traffic (Traffic Monitoring).
-Use Macros:
-
-Macro 1: failed_login_attempts to simplify queries related to failed logins.
-Macro 2: high_response_time to identify high response times quickly.
-Use Field Aliases:
-
-Alias 1: client_ip as src_ip in web logs.
-Alias 2: status as http_status to standardize field names across logs.
-These tasks will help you create a more efficient, automated, and consistent monitoring system in Splunk, covering both security and business insights.
-
+Now, view your dashboard in normal mode (exit edit mode).
+Click on a data point (like a specific user in a chart) and you should be redirected to a search page or a new panel with detailed results filtered based on your click.
 
