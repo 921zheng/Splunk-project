@@ -164,55 +164,30 @@ index=security sourcetype=linux_secure action=failure | stats count by user
 ![Screen Shot 2024-08-16 at 12 32 40](https://github.com/user-attachments/assets/3d9a270f-2899-44f0-ad32-944766f8c4c2)
 
 
-#### 3. Building the Dashboards
-Create a New Dashboard:
-
-Go to the Search & Reporting app in Splunk.
-Click on Dashboards and then Create New Dashboard.
-Name the dashboard based on its focus (e.g., "Buying Trends").
-Add Panels:
-
-Click on Add Panel and choose New from Search.
-Input the search query for each panel and configure the visualization type (e.g., bar chart, line chart).
-Customize panel titles and descriptions.
-Customize and Save:
-
-Arrange the panels as needed on the dashboard.
-Save the dashboard and adjust any additional settings like permissions.
-#### 4. Iterate and Refine
-Review Data: Regularly check the dashboards to ensure they provide accurate and actionable insights.
-Set Alerts: If certain metrics require immediate attention, set up alerts based on the dashboard data (e.g., spikes in failed login attempts).
-
 ### Create reports
 
-1. Security Report: Failed Login Attempts
-Purpose: Monitor failed login attempts to identify potential security threats, such as brute-force attacks.
+#### 1. Security Report: Failed Login Attempts
 
+Purpose: Monitor failed login attempts to identify potential security threats, such as brute-force attacks.
 
 index=security sourcetype=linux_secure action=failure
 | stats count by user, src_ip
 | sort -count
-Steps to Create and Schedule:
-Run the Search: Use the above query to identify failed login attempts.
-Save as Report:
-After running the query, click on "Save As" > "Report".
-Name it something like "Failed Login Attempts by User and Source IP".
+
 Schedule the Report:
 In the report creation screen, select "Schedule".
-Set the frequency (e.g., daily, hourly).
-Choose the time of day to run the report.
-Set up an email alert or notification if the report identifies a high number of failures.
-Visualization: Optionally, add a bar chart or table to visualize the counts.
-2. Business Insight Report: Top Products or Services Accessed
+Set the frequency (daily 10am).
+Set up an email notification if the report identifies a high number of failures.
+
+#### 2. Business Insight Report: Top Products or Services Accessed
+
 Purpose: Identify which products or services are most frequently accessed, giving insight into user behavior and business trends.
 
-Search Query:
-spl
-Copy code
 index=web sourcetype=access_combined
 | rex field=url "/(?<product>[^/]+)\?"
 | stats count by product
 | sort -count
+
 Steps to Create and Schedule:
 Run the Search: Use the above query to identify the most accessed products or services.
 Save as Report:
@@ -221,14 +196,14 @@ Schedule the Report:
 Schedule it to run weekly or monthly to track trends over time.
 Consider setting up alerts if access to specific products increases or decreases significantly.
 Visualization: A bar chart showing the most accessed products/services by count.
-3. Custom Report: Website Traffic Overview
+
+#### 3. Custom Report: Website Traffic Overview
 Purpose: Monitor overall website traffic trends, helping you understand peak usage times and potential issues.
 
 Search Query:
-spl
-Copy code
 index=web sourcetype=access_combined
 | timechart span=1h count by host
+
 Steps to Create and Schedule:
 Run the Search: Use the query to create an overview of traffic over time, broken down by host (e.g., www1, www2, www3).
 Save as Report:
