@@ -248,7 +248,7 @@ Alert Actions: Send an email.
 
 #### 1. Use Macros
 
-Process: setteing-advanced search
+Process: setting-advanced search
 
 Name: failed_login_attempts
 
