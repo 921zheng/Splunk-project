@@ -163,4 +163,127 @@ index=security sourcetype=linux_secure action=failure | stats count by user
 
 ![Screen Shot 2024-08-16 at 12 32 40](https://github.com/user-attachments/assets/3d9a270f-2899-44f0-ad32-944766f8c4c2)
 
+### Create reports
+
+#### 1. Security Report: Failed Login Attempts
+
+Purpose: Monitor failed login attempts to identify potential security threats, such as brute-force attacks.
+
+index=security sourcetype=linux_secure action=failure
+| stats count by user, src_ip
+| sort -count
+
+Schedule the Report:
+In the report creation screen, select "Schedule".
+Set the frequency (daily 10am).
+Set up an email notification if the report identifies a high number of failures.
+
+#### 2. Business Insight Report: Top Products or Services Accessed
+
+Purpose: Identify which products or services are most frequently accessed, giving insight into user behavior and business trends.
+
+index=web sourcetype=access_combined
+| rex field=url "/(?<product>[^/]+)\?"
+| stats count by product
+| sort -count
+
+Schedule the Report:
+Schedule it to run weekly or monthly to track trends over time.
+Consider setting up alerts if access to specific products increases or decreases significantly.
+
+#### 3. Custom Report: Website Traffic Overview
+Purpose: Monitor overall website traffic trends, helping you understand peak usage times and potential issues.
+
+index=web sourcetype=access_combined
+| timechart span=1h count by host
+
+Schedule the Report:
+Schedule it to run daily or every few hours.
+Useful to understand traffic patterns and identify potential load or availability issues.
+
+Frequency: Choose when and how often the report should run (e.g., daily at 6 AM).
+Time Range: Define the time range the report should cover (e.g., "Last 24 hours").
+Alert Actions: Choose if you want to send an email or trigger another alert when the report runs.
+Review and Save: Finalize and save the scheduled report.
+
+### Create 3 Alerts
+
+#### Alert 1: Excessive Failed Login Attempts (Security Monitoring)
+Purpose: Detect potential brute-force attacks or unauthorized access attempts by monitoring excessive failed login attempts within a short period.
+
+index=security sourcetype=linux_secure action=failure
+| stats count by src_ip
+| where count > 10
+
+Alert Configuration:
+Trigger Condition: When count > 10 (indicating more than 10 failed login attempts from the same IP within a specific time).
+Time Window: 10 minutes (adjust based on your environment).
+Alert Actions: Send an email.
+
+#### Alert 2: High Website Response Time (Performance Monitoring)
+Purpose: Identify when your website's response time exceeds acceptable thresholds, which may indicate performance issues.
+
+index=web sourcetype=access_combined
+| stats avg(response_time) as avg_response_time by host
+| where avg_response_time > 2  // Adjust threshold as needed
+
+Alert Configuration:
+Trigger Condition: When avg_response_time > 2 seconds.
+Alert Actions: Send an email.
+
+#### Alert 3: Unusual Spike in Traffic (Traffic Monitoring)
+Purpose: Detect unusual spikes in website traffic that could indicate a DDoS attack or viral content.
+
+index=web sourcetype=access_combined
+| timechart span=5m count
+| eventstats avg(count) as avg_traffic
+| where count > 2 * avg_traffic
+
+Alert Configuration:
+Trigger Condition: When count > 2 * avg_traffic (indicating traffic has doubled compared to the average).
+Time Window: 15 minutes.
+Alert Actions: Send an email.
+
+### Bonus 
+
+#### 1. Use Macros
+
+Process: setteing-advanced search
+
+Name: failed_login_attempts
+
+index=security sourcetype=linux_secure action=failure
+
+
+#### 2. Use Field Aliases
+
+Sourcetype, Source, or Host: Specify the sourcetype (like access_combined) that this alias applies to.
+Original Field: Enter the original field name (e.g., client_ip).
+Alias Field: Enter the new field name (e.g., src_ip).
+
+
+index=your_index sourcetype=access_combined | stats count by src_ip
+same as
+index=your_index sourcetype=access_combined | stats count by client_ip
+
+
+#### 3. Steps to Implement Drilldowns in Splunk:
+
+Process: 
+
+First, navigate to Dashboards from the Splunk homepage.
+Choose an existing dashboard to edit.
+
+Click Edit at the top right of the dashboard to enable edit mode.
+Select the Visualization Panel:
+
+Hover over the panel you want to add a drilldown to and click on the Edit icon (a pencil icon).
+Set Up the Drilldown Action:
+
+In the panel editing window, scroll down to find the Drilldown section.
+By default, Splunk might have "Enable drilldown" checked. Here you can specify the drilldown behavior:
+Link to Search: This option will take you to a search page pre-filtered by the clicked value.
+Link to Dashboard: This allows you to link to another dashboard.
+Link to Custom URL: If you want to open an external page.
+
 
