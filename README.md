@@ -241,7 +241,6 @@ index=web sourcetype=access_combined
 
 Alert Configuration:
 Trigger Condition: When count > 2 * avg_traffic (indicating traffic has doubled compared to the average).
-Time Window: 15 minutes.
 Alert Actions: Send an email.
 
 ### Bonus 
