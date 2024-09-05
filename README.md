@@ -163,6 +163,39 @@ index=security sourcetype=linux_secure action=failure | stats count by user
 
 ![Screen Shot 2024-08-16 at 12 32 40](https://github.com/user-attachments/assets/3d9a270f-2899-44f0-ad32-944766f8c4c2)
 
+
+#### Dashboard 6: 
+focus: comparing both unique visitors and average session duration on the same chart for better insight into user behavior.
+
+index=web sourcetype=access_combined
+| transaction client_ip maxpause=30m
+| timechart span=1h dc(client_ip) as Unique_Visitors, avg(duration) as Avg_Session_Duration
+
+![Screen Shot 2024-09-05 at 11 47 34](https://github.com/user-attachments/assets/5f662626-0753-40e8-b050-48678f28f3cb)
+
+
+#### Dashboard 7:
+
+focus: where your website visitors are located globally and identifying hotspots of activity or potential regional issues.
+
+index=web sourcetype=access_combined
+| iplocation client_ip
+| stats count by client_ip, City, Country, lat, lon
+| geostats latfield=lat longfield=lon count
+
+![Screen Shot 2024-09-05 at 11 56 44](https://github.com/user-attachments/assets/791b4419-45df-47cf-8106-e452c874882a)
+
+#### Dashboard 8:
+focus: Line Chart with Multiple Dimensions (Status and User Agent)
+
+index=web sourcetype=access_combined
+| stats count by _time, status, url
+| timechart span=1h sum(count) by status
+| fillnull value=0
+
+![Screen Shot 2024-09-05 at 13 43 26](https://github.com/user-attachments/assets/907a4a10-3f3a-4b48-bc75-2b5b2b3b6338)
+
+
 ### Create reports
 
 #### 1. Security Report: Failed Login Attempts
