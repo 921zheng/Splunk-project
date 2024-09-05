@@ -173,8 +173,16 @@ index=web sourcetype=access_combined
 
 ![Screen Shot 2024-09-05 at 11 47 34](https://github.com/user-attachments/assets/5f662626-0753-40e8-b050-48678f28f3cb)
 
-
 #### Dashboard 7:
+focus: comparing both unique visitors and total visitors duration on the same chart for better insight into user behavior.
+
+index=web sourcetype=access_combined
+| transaction client_ip maxpause=30m
+| timechart span=1h dc(client_ip) as Unique_Visitors, count as Total_Visitors
+
+![Screen Shot 2024-09-05 at 14 49 51](https://github.com/user-attachments/assets/f6f2266b-107e-4b92-90da-5d9ad3dc50e2)
+
+#### Dashboard 8:
 
 focus: where your website visitors are located globally and identifying hotspots of activity or potential regional issues.
 
@@ -185,7 +193,10 @@ index=web sourcetype=access_combined
 
 ![Screen Shot 2024-09-05 at 11 56 44](https://github.com/user-attachments/assets/791b4419-45df-47cf-8106-e452c874882a)
 
-#### Dashboard 8:
+
+
+
+#### Dashboard 9:
 focus: Line Chart with Multiple Dimensions (Status and User Agent)
 
 index=web sourcetype=access_combined
