@@ -197,7 +197,7 @@ index=web sourcetype=access_combined
 
 
 #### Dashboard 9:
-focus: Line Chart with Multiple Dimensions (Status and User Agent)
+focus: Line Chart with Multiple Dimensions 
 
 index=web sourcetype=access_combined
 | stats count by _time, status, url
